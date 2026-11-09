@@ -1,0 +1,166 @@
+.stApp {background:var(--fundo);color:var(--texto);font-family:'Segoe UI',sans-serif}
+.block-container {max-width:1600px;padding:1.5rem 2rem 3rem}
+header[data-testid="stHeader"] {background:transparent}
+.hero {background:linear-gradient(110deg,#0f4a22,#1b7437 55%,#2f9e55);color:white;padding:26px 30px;border-radius:18px;margin-bottom:18px;box-shadow:0 8px 24px -12px #12301f55}
+.hero h1 {color:white;font-size:28px;padding:0;margin:5px 0 8px;font-weight:700}
+.hero p {margin:0;color:#d6f0de;font-size:14px}
+.hero .marca {font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#bfe3c9;font-weight:700}
+[data-testid="stMetric"] {background:var(--cartao);border:1px solid var(--linha);border-radius:18px;padding:18px 14px;min-height:118px;box-shadow:0 6px 22px -15px #12301f66}
+[data-testid="stMetricLabel"] {color:var(--suave);font-size:12px}
+[data-testid="stMetricValue"] {color:var(--verde);font-size:28px;font-weight:700}
+[data-testid="stExpander"], [data-testid="stPlotlyChart"], [data-testid="stDataFrame"] {background:var(--cartao);border:1px solid var(--linha);border-radius:18px;overflow:hidden}
+[data-testid="stPlotlyChart"] {padding:8px;box-shadow:0 6px 22px -16px #12301f66}
+[data-baseweb="tab-list"] {gap:6px;background:var(--cartao);padding:8px;border-radius:14px;overflow-x:auto}
+button[data-baseweb="tab"] {border-radius:9px;padding:8px 16px;white-space:nowrap}
+button[data-baseweb="tab"][aria-selected="true"] {background:#1b7437;color:white}
+[data-baseweb="tab-highlight"], [data-baseweb="tab-border"] {display:none}
+h2,h3 {color:var(--verde)}
+[data-baseweb="select"]>div {background:var(--cartao);border-color:var(--linha);border-radius:9px}
+.stButton button,.stDownloadButton button {border-radius:10px;border-color:#bfe3c9;color:var(--verde)}
+.stButton button:hover,.stDownloadButton button:hover {border-color:var(--verde);background:var(--apoio);color:var(--verde)}
+[data-testid="stMetric"], [data-testid="stPlotlyChart"] {transition:box-shadow .2s ease,transform .2s ease}
+[data-testid="stMetric"]:hover {transform:translateY(-3px);box-shadow:0 10px 24px -14px #12301f88}
+@media(prefers-reduced-motion:reduce){[data-testid="stMetric"],[data-testid="stPlotlyChart"]{transition:none}[data-testid="stMetric"]:hover{transform:none}}
+[data-testid="stFileUploaderDropzoneInstructions"]>div>span,
+[data-testid="stFileUploaderDropzoneInstructions"]>div>small {display:none}
+[data-testid="stFileUploaderDropzoneInstructions"]>div::before {content:'Arraste sua planilha para cá';display:block;font-size:14px}
+[data-testid="stFileUploaderDropzoneInstructions"]>div::after {content:'Arquivos CSV ou Excel · até 200 MB';display:block;font-size:12px;color:var(--suave)}
+[data-testid="stFileUploaderDropzone"] button {font-size:0}
+[data-testid="stFileUploaderDropzone"] button::after {content:'Selecionar arquivo';font-size:14px}
+@media(max-width:760px){.block-container{padding:1rem}.hero{padding:20px}.hero h1{font-size:22px}[data-testid="stMetricValue"]{font-size:24px}}
+
+/* Disposição compacta inspirada no painel HTML original. */
+.block-container {max-width:none;padding:1rem 1.8rem 2rem}
+[data-testid="stVerticalBlock"] {gap:14px}
+.st-key-menu_superior {background:linear-gradient(90deg,#0f4a22,#1b7437 60%,#2f9e55);border-radius:36px;padding:12px 18px;color:white;margin-bottom:2px}
+.st-key-menu_superior [data-testid="stHorizontalBlock"] {align-items:center;gap:10px}
+.st-key-menu_superior p,.st-key-menu_superior [data-testid="stWidgetLabel"] {color:#e7f2ea;font-size:13px;font-weight:600}
+.st-key-menu_superior [role="radiogroup"] {gap:2px;flex-wrap:wrap}
+.st-key-menu_superior [role="radiogroup"] label {padding:9px 10px;border-radius:24px;margin:0;min-height:38px}
+.st-key-menu_superior [role="radiogroup"] label>div:first-child {position:absolute;opacity:0;width:1px;overflow:hidden}
+.st-key-menu_superior [role="radiogroup"] label:focus-within {outline:2px solid #bfe3c9;outline-offset:2px}
+.st-key-menu_superior [role="radiogroup"] label:has(input:checked) {background:#fff}
+.st-key-menu_superior [role="radiogroup"] label:has(input:checked) p {color:#1b7437}
+.hero {position:relative;overflow:hidden;border-radius:28px;padding:25px 30px;margin-bottom:0}
+.hero::before {content:'';position:absolute;left:48%;top:-80%;height:300%;width:70px;background:#ffffff0d;transform:rotate(24deg);pointer-events:none}
+.hero h1 {font-size:28px;margin:0 0 5px;position:relative}
+.hero p {position:relative}
+.st-key-filtros_compactos {background:var(--cartao);border:1px solid var(--linha);border-radius:26px;padding:16px 20px;box-shadow:0 6px 18px -14px #0008}
+.st-key-filtros_compactos [data-testid="stVerticalBlock"] {gap:6px}
+.st-key-filtros_compactos [data-testid="stHorizontalBlock"] {gap:12px}
+.st-key-filtros_compactos [data-testid="stWidgetLabel"] p {font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--suave);font-weight:600}
+.st-key-filtros_compactos [data-baseweb="select"]>div {min-height:36px;font-size:12px;border-radius:22px;background:var(--apoio);padding-top:0;padding-bottom:0}
+.st-key-filtros_compactos [data-testid="stCaptionContainer"] p {font-size:11px;line-height:1.5;margin-top:5px}
+.espaco-botao {height:19px}
+.st-key-filtros_compactos .stButton button {min-height:36px;padding:4px 12px;border-radius:20px;font-size:12px}
+.indicador {position:relative;overflow:hidden;background:var(--cartao);border:1px solid var(--linha);border-radius:26px;padding:18px 20px;min-height:174px;box-shadow:0 6px 18px -14px #0009;transition:transform .2s}
+.indicador:hover {transform:translateY(-2px)}
+.indicador::after {content:'';position:absolute;right:-18px;top:-22px;width:100px;height:100px;border-radius:50%;background:var(--verde);opacity:.1;pointer-events:none}
+.icone-indicador {display:grid;place-items:center;width:37px;height:37px;border-radius:50%;background:#2f9e55;color:white;font-size:25px;margin-bottom:7px}
+.rotulo-indicador {color:var(--suave);font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+.valor-indicador {color:var(--verde);font-size:34px;font-weight:750;line-height:1.3;font-variant-numeric:tabular-nums}
+.detalhe-indicador {color:var(--suave);font-size:11px;margin-top:2px}
+@media(max-width:1100px) and (min-width:761px){.st-key-filtros_compactos [data-testid="stHorizontalBlock"] {flex-wrap:wrap}.st-key-filtros_compactos [data-testid="stColumn"]{min-width:21%;flex:1 1 21%}.st-key-menu_superior [data-testid="stHorizontalBlock"]{flex-wrap:wrap}.st-key-menu_superior [data-testid="stColumn"]{min-width:100%}.indicador{padding:14px 10px}.valor-indicador{font-size:27px}}
+@media(max-width:760px){.block-container{padding:12px}.st-key-menu_superior{border-radius:20px}.hero{padding:20px}.hero h1{font-size:22px}.st-key-filtros_compactos{padding:14px}.st-key-filtros_compactos [data-testid="stHorizontalBlock"]{flex-wrap:wrap}.st-key-filtros_compactos [data-testid="stColumn"]{min-width:44%;flex:1 1 44%}.espaco-botao{height:0}}
+@media(prefers-reduced-motion:reduce){.indicador{transition:none}.indicador:hover{transform:none}}
+
+[data-testid="stVerticalBlockBorderWrapper"]>div {border-color:var(--linha)}
+[data-testid="stWidgetLabel"], [data-testid="stCaptionContainer"] {color:var(--suave)}
+[data-baseweb="input"], [data-baseweb="input"] input, [data-baseweb="popover"], [data-baseweb="menu"], [role="listbox"], [role="option"] {background:var(--cartao);color:var(--texto)}
+[data-baseweb="select"] * {color:var(--texto)}
+[data-baseweb="tag"] {background:var(--apoio)}
+.stButton button,.stDownloadButton button,[data-testid="stFormSubmitButton"] button,[data-testid="stFileUploaderDropzone"] {background:var(--cartao);color:var(--verde);border-color:var(--linha)}
+
+/* Sobrescreve também as camadas internas dos seletores do Streamlit. */
+[data-testid="stMultiSelect"] [data-baseweb="select"] > div,
+[data-testid="stMultiSelect"] [data-baseweb="select"] > div > div,
+[data-testid="stMultiSelect"] [data-baseweb="select"] input {
+    background-color:var(--apoio) !important;
+    color:var(--texto) !important;
+    border-color:var(--linha) !important;
+    -webkit-text-fill-color:var(--texto);
+}
+[data-testid="stMultiSelect"] [data-baseweb="select"] svg {color:var(--suave) !important;fill:currentColor}
+[data-testid="stMultiSelect"] [data-baseweb="select"]:focus-within > div {border-color:var(--verde) !important;box-shadow:0 0 0 2px color-mix(in srgb,var(--verde) 20%,transparent)}
+[data-baseweb="popover"] > div,
+[data-baseweb="popover"] [role="listbox"],
+[data-baseweb="popover"] [role="option"],
+[data-baseweb="popover"] [data-baseweb="menu"],
+[data-baseweb="popover"] li {
+    background-color:var(--cartao) !important;
+    color:var(--texto) !important;
+    border-color:var(--linha) !important;
+}
+[data-baseweb="popover"] [role="option"]:hover,
+[data-baseweb="popover"] [role="option"][aria-selected="true"],
+[data-baseweb="popover"] li:hover {background-color:var(--apoio) !important}
+
+/* Streamlit 1.67 usa React Aria nos multisseletores, sem data-baseweb. */
+[data-testid="stMultiSelect"] div:has(> [data-testid="stMultiSelectTagsContainer"]) {
+    background:var(--apoio) !important;
+    color:var(--texto) !important;
+    border:1px solid var(--linha) !important;
+    border-radius:22px !important;
+    min-height:36px;
+}
+[data-testid="stMultiSelectTagsContainer"],
+[data-testid="stMultiSelectTagsContainer"] input {
+    background:var(--apoio) !important;
+    color:var(--texto) !important;
+    -webkit-text-fill-color:var(--texto) !important;
+}
+[data-testid="stMultiSelectTagsContainer"] input::placeholder {color:var(--suave) !important;opacity:1;-webkit-text-fill-color:var(--suave) !important}
+[data-testid="stMultiSelect"] button {background:transparent !important;color:var(--suave) !important}
+[data-testid="stMultiSelect"] [data-tag] {background:var(--cartao) !important;color:var(--texto) !important}
+[data-testid="stMultiSelect"] div:has(> [data-testid="stMultiSelectTagsContainer"])[data-focus-within] {border-color:var(--verde) !important;box-shadow:0 0 0 2px color-mix(in srgb,var(--verde) 20%,transparent)}
+[data-testid="stMultiSelectDropdown"],
+[data-testid="stMultiSelectDropdown"] [role="listbox"],
+[data-testid="stMultiSelectDropdown"] [role="option"] {
+    background:var(--cartao) !important;
+    color:var(--texto) !important;
+    border-color:var(--linha) !important;
+}
+[data-testid="stMultiSelectDropdown"] [role="option"][data-focused],
+[data-testid="stMultiSelectDropdown"] [role="option"][aria-selected="true"],
+[data-testid="stMultiSelectDropdown"] [role="option"]:hover {background:var(--apoio) !important;color:var(--verde) !important}
+
+/* Recorta as camadas internas para manter as duas extremidades arredondadas. */
+[data-testid="stMultiSelect"] div:has(> [data-testid="stMultiSelectTagsContainer"]) {
+    border-radius:24px !important;
+    overflow:hidden;
+}
+[data-testid="stMultiSelectTagsContainer"] {
+    border-radius:24px 0 0 24px !important;
+}
+[data-testid="stMultiSelectTagsContainer"] input {
+    border-radius:20px !important;
+}
+
+[data-testid="stMultiSelect"] [data-tag] {
+    border-radius:999px !important;
+    overflow:hidden;
+    padding-left:10px;
+    padding-right:6px;
+}
+[data-testid="stMultiSelect"] [data-tag] button {
+    border-radius:50% !important;
+}
+
+/* Hierarquia e acabamento comuns a todas as seções. */
+.titulo-secao {margin:14px 0 2px;padding-left:12px;border-left:4px solid var(--verde)}
+.titulo-secao h2 {font-size:19px;font-weight:700;color:var(--texto);margin:0;padding:0;line-height:1.4}
+.titulo-secao p {font-size:12px;color:var(--suave);margin:4px 0 0;line-height:1.5}
+[data-testid="stPlotlyChart"] {border-radius:22px;padding:6px 10px}
+[data-testid="stDataFrame"] {border-radius:18px;box-shadow:0 8px 24px -20px #0008}
+[data-testid="stVerticalBlockBorderWrapper"]>div {border-radius:20px;background:var(--cartao);border-color:var(--linha)}
+.st-key-consulta_registros {background:var(--cartao);border-radius:20px}
+[data-testid="stTextInput"] input {background:var(--apoio) !important;color:var(--texto) !important;border-radius:12px}
+[data-testid="stTextInput"] input::placeholder {color:var(--suave);opacity:1}
+[data-testid="stSelectbox"] [role="combobox"],
+[data-testid="stSelectbox"] button {background:var(--apoio) !important;color:var(--texto) !important;border-color:var(--linha) !important;border-radius:14px}
+[data-testid="stForm"] {background:var(--cartao);border:1px solid var(--linha);border-radius:22px;padding:20px}
+[data-testid="stExpander"] summary {color:var(--texto)}
+[data-testid="stCaptionContainer"] p {color:var(--suave)}
+.stDownloadButton button {padding:9px 18px;font-weight:600}
+[data-testid="stAlert"] {border-radius:16px}
+@media(max-width:760px){.titulo-secao h2{font-size:17px}.indicador{min-height:150px}.valor-indicador{font-size:28px}[data-testid="stForm"]{padding:14px}}
