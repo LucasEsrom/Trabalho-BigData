@@ -164,3 +164,27 @@ h2,h3 {color:var(--verde)}
 .stDownloadButton button {padding:9px 18px;font-weight:600}
 [data-testid="stAlert"] {border-radius:16px}
 @media(max-width:760px){.titulo-secao h2{font-size:17px}.indicador{min-height:150px}.valor-indicador{font-size:28px}[data-testid="stForm"]{padding:14px}}
+
+/* Tela inicial sem registros: conteúdo concentrado e ação em destaque. */
+.st-key-inicio_vazio {
+    width:min(100%,720px);
+    margin:clamp(22px,5vh,54px) auto 28px;
+    padding:38px clamp(20px,4vw,52px) 26px;
+    background:var(--cartao);
+    border:1px solid var(--linha);
+    border-radius:26px;
+    box-shadow:0 18px 45px -32px #0009;
+}
+.boas-vindas {text-align:center}
+.simbolo-importacao {display:grid;place-items:center;width:62px;height:62px;margin:0 auto 18px;background:var(--apoio);color:var(--verde);border:1px solid var(--linha);border-radius:20px;font-size:36px;line-height:1}
+.etiqueta-inicio {font-size:10px;letter-spacing:1.6px;color:var(--verde);font-weight:700;margin-bottom:10px}
+.boas-vindas h2 {color:var(--texto);font-size:clamp(22px,2.2vw,28px);font-weight:700;margin:0;padding:0}
+.boas-vindas p {max-width:470px;margin:12px auto 22px;color:var(--suave);font-size:14px;line-height:1.7}
+.etapas-inicio {display:flex;justify-content:center;gap:18px;margin:0 0 22px;flex-wrap:wrap}
+.etapas-inicio span {display:flex;align-items:center;gap:7px;color:var(--suave);font-size:11px}
+.etapas-inicio b {display:grid;place-items:center;width:23px;height:23px;border-radius:50%;background:var(--apoio);color:var(--verde);font-size:11px}
+.st-key-inicio_vazio .stButton {max-width:300px;margin:0 auto}
+.st-key-inicio_vazio .stButton button {background:#2f9e55!important;color:white!important;border:1px solid #2f9e55!important;border-radius:12px;min-height:46px;font-weight:600}
+.st-key-inicio_vazio .stButton button:hover {background:#258447!important;border-color:#258447!important}
+.nota-inicio {text-align:center;color:var(--suave);font-size:11px;line-height:1.6;margin-top:5px}
+@media(max-width:600px){.st-key-inicio_vazio{margin:18px auto;padding:26px 18px 22px}.etapas-inicio{gap:10px}.etapas-inicio span{font-size:10px}}

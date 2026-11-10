@@ -1,6 +1,7 @@
 """Painel de zoonoses: tratamento com pandas e interface com Streamlit."""
 import io
 import json
+import unicodedata
 from html import escape
 from pathlib import Path
 
@@ -116,11 +117,54 @@ NOMES = {"ia": "id_animal", "m": "município", "e": "espécie", "r": "raca",
          "gr": "gravidade", "pv": "providencias", "ot": "tipo_ocorrencia", "mo": "motivo"}
 
 
+def normalizar_nome(valor):
+    texto = unicodedata.normalize("NFKD", str(valor).strip().lstrip("\ufeff").lower())
+    return "_".join("".join(c for c in texto if not unicodedata.combining(c)).split())
+
+
+def padronizar_colunas(df):
+    aliases = {normalizar_nome(v): k for k, v in NOMES.items()}
+    aliases.update({"data_cadastro": "d", "data_diagnostico": "d", "data_ocorrencia": "d"})
+    return df.rename(columns={c: aliases.get(normalizar_nome(c), normalizar_nome(c)) for c in df.columns})
+
+
+def ler_importacao(arquivo, destino, todas_abas, duplicados="Rejeitar"):
+    """Lê todas as abas compatíveis e valida antes de alterar a sessão."""
+    def validar(chave, tabela):
+        tabela = padronizar_colunas(tabela)
+        if chave == "cad" and "ia" in tabela and duplicados != "Rejeitar":
+            codigos = pd.to_numeric(tabela["ia"], errors="coerce")
+            tabela = tabela.loc[~codigos.duplicated(keep="first" if duplicados == "Manter primeira linha" else "last") | codigos.isna()]
+        return tratar(chave, tabela)
+    if arquivo.name.lower().endswith("xlsx"):
+        abas = pd.read_excel(arquivo, sheet_name=None if todas_abas else 0)
+        if not todas_abas:
+            return {destino: validar(destino, abas)}
+        resultado = {}
+        for nome, tabela in abas.items():
+            colunas = set(padronizar_colunas(tabela).columns)
+            candidatos = [k for k, (_, obrigatorias) in TABELAS.items() if set(obrigatorias).issubset(colunas)]
+            if len(candidatos) != 1:
+                raise ValueError(f'Aba "{nome}": não foi possível identificar uma tabela. Confira as colunas ou desmarque a importação de todas as abas.')
+            chave = candidatos[0]
+            if chave in resultado:
+                raise ValueError(f'Mais de uma aba corresponde a {TABELAS[chave][0]}. Importe essas abas separadamente.')
+            try:
+                resultado[chave] = validar(chave, tabela)
+            except ValueError as erro:
+                raise ValueError(f'Aba "{nome}": {erro}') from erro
+        return resultado
+    bruto = arquivo.getvalue()
+    try:
+        texto = bruto.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        texto = bruto.decode("cp1252")
+    return {destino: validar(destino, pd.read_csv(io.StringIO(texto), sep=None, engine="python"))}
+
+
 def tratar(chave, df):
     """Padroniza colunas, valida valores e rejeita importações inválidas."""
-    df = df.copy()
-    df.columns = [str(c).strip().lstrip("\ufeff") for c in df.columns]
-    df = df.rename(columns={v: k for k, v in NOMES.items()})
+    df = padronizar_colunas(df.copy())
     if df.columns.duplicated().any():
         raise ValueError("Há colunas repetidas após a padronização dos nomes.")
     faltantes = set(TABELAS[chave][1]) - set(df.columns)
@@ -153,17 +197,35 @@ def tratar(chave, df):
              "s": ["Adotado", "Castrado", "Em Tratamento", "Óbito"],
              "a": ["Clínica", "Recolhimento", "Castração"]}
     for c, valores in enums.items():
-        if c in df and not df[c].isin(valores).all():
-            raise ValueError(f"{NOMES[c]} aceita: {', '.join(valores)}.")
+        if c in df:
+            equivalentes = {normalizar_nome(v): v for v in valores}
+            if c == "e":
+                equivalentes.update({"cachorro": "Cão", "canino": "Cão", "felino": "Gato"})
+            df[c] = df[c].map(lambda v: equivalentes.get(normalizar_nome(v), v))
+            if not df[c].isin(valores).all():
+                raise ValueError(f"{NOMES[c]} aceita: {', '.join(valores)}.")
     if chave == "cad" and df["ia"].duplicated().any():
-        raise ValueError("O id_animal deve ser único na tabela Animais.")
+        repetidos = df.loc[df["ia"].duplicated(), "ia"].unique()
+        raise ValueError(f"Há códigos de animal repetidos: {', '.join(map(str, repetidos[:10]))}. Corrija a planilha ou escolha como tratar cadastros repetidos no formulário.")
     return df
 
 
 @st.cache_data
 def carregar():
     dados = json.loads(Path(__file__).with_name("dados.json").read_text(encoding="utf-8"))
-    return {k: tratar(k, pd.DataFrame(v)) for k, v in dados.items()}
+    tabelas = {}
+    for chave, (_, colunas) in TABELAS.items():
+        registros = dados.get(chave, [])
+        if registros:
+            tabelas[chave] = tratar(chave, pd.DataFrame(registros))
+        else:
+            tabela = pd.DataFrame({c: pd.Series(dtype="string") for c in colunas})
+            tabela["d"] = pd.Series(dtype="datetime64[ns]")
+            for c in ("ia", "i", "n"):
+                if c in tabela:
+                    tabela[c] = pd.Series(dtype="Int64")
+            tabelas[chave] = tabela
+    return tabelas
 
 
 def grafico(df, coluna, titulo, pizza=False):
@@ -195,59 +257,57 @@ def evolucao(df, doses=False):
     mostrar_grafico(fig, identificador="evolucao")
 
 
-if "dados" not in st.session_state:
+if "dados" not in st.session_state or st.session_state.get("base_importacao_vazia") != 1:
     st.session_state.dados = carregar()
+    limpar_filtros()
+    st.session_state["base_importacao_vazia"] = 1
 dados = st.session_state.dados
 cabecalho = st.empty()
 if pagina == "Gerenciar dados":
-    cabecalho.markdown('<div class="hero"><h1>Gerenciar dados do painel</h1><p>Importação, exportação e restauração das tabelas</p></div>', unsafe_allow_html=True)
+    cabecalho.markdown('<div class="hero"><h1>Gerenciar dados do painel</h1><p>Importe suas planilhas e consulte apenas os seus registros</p></div>', unsafe_allow_html=True)
 
 def gerenciar_dados():
-    titulo_secao("Preparar e importar", "Siga as etapas abaixo para atualizar uma tabela. Os arquivos originais são preservados.")
+    titulo_secao("Preparar e importar", "O painel não contém dados de exemplo. Importe suas próprias planilhas CSV ou Excel.")
+    st.caption("Para diagnósticos, maus-tratos e óbitos, importe primeiro a tabela Animais com os códigos correspondentes. Vacinação, canil e notificações podem ser importados diretamente.")
     preparar, importar = st.columns([1, 1.35], gap="large")
     with preparar:
         st.markdown("### 1. Escolha a tabela")
         destino = st.selectbox("Tabela", list(TABELAS), format_func=lambda k: TABELAS[k][0])
         csv = dados[destino].rename(columns=NOMES).to_csv(index=False, sep=";", date_format="%Y-%m-%d").encode("utf-8-sig")
         st.download_button("Baixar CSV da tabela", csv, f"{destino}.csv", "text/csv")
-        with st.expander("Consultar colunas e exemplos"):
+        st.download_button("Baixar modelo vazio", dados[destino].iloc[:0].rename(columns=NOMES).to_csv(index=False, sep=";").encode("utf-8-sig"), f"modelo_{destino}.csv", "text/csv")
+        with st.expander("Consultar colunas e registros atuais"):
             st.dataframe(dados[destino].head(5).rename(columns=NOMES), hide_index=True, width="stretch")
     with importar:
         st.markdown("### 2. Importe a planilha")
-        st.info("A tabela escolhida será substituída por completo. As outras tabelas serão preservadas.")
+        st.info("As tabelas importadas serão substituídas por completo. Com todas as abas do Excel ativadas, cada aba será identificada pelas colunas; a seleção ao lado vale apenas para CSV ou importação da primeira aba.")
         with st.form("importacao"):
             arquivo = st.file_uploader("Selecione uma planilha CSV ou Excel", type=["csv", "xlsx"], help="Use o botão de seleção abaixo para escolher o arquivo no computador.")
-            aplicar = st.form_submit_button("Validar e substituir tabela")
+            todas_abas = st.checkbox("Excel: importar todas as abas", value=True, help="Cada aba será identificada pelas colunas. Para CSV ou Excel com esta opção desmarcada, vale a tabela escolhida ao lado.")
+            duplicados = st.selectbox("Cadastros com o mesmo código de animal", ["Rejeitar", "Manter primeira linha", "Manter última linha"], help="Se houver códigos repetidos em Animais, escolha qual linha deve ser usada. As linhas descartadas não entram nos indicadores.")
+            aplicar = st.form_submit_button("Validar e importar dados")
     if aplicar and arquivo is None:
         st.warning("Selecione uma planilha antes de importar.")
     if aplicar and arquivo is not None:
         try:
-            if arquivo.name.lower().endswith("xlsx"):
-                novo = pd.read_excel(arquivo)
-            else:
-                bruto = arquivo.getvalue()
-                try:
-                    texto = bruto.decode("utf-8-sig")
-                except UnicodeDecodeError:
-                    texto = bruto.decode("cp1252")
-                novo = pd.read_csv(io.StringIO(texto), sep=None, engine="python")
-            novo = tratar(destino, novo)
-            proximos = {**dados, destino: novo}
+            importadas = ler_importacao(arquivo, destino, todas_abas, duplicados)
+            proximos = {**dados, **importadas}
             ids = set(proximos["cad"]["ia"])
             for k in ("diag", "maus", "obit"):
                 if not proximos[k]["ia"].isin(ids).all():
                     raise ValueError(f"{TABELAS[k][0]} contém id_animal sem cadastro na tabela Animais.")
             st.session_state.dados = proximos
             limpar_filtros()
-            st.session_state["mensagem_importacao"] = f"Importação concluída: {len(novo)} registros em {TABELAS[destino][0]}."
+            resumo = "; ".join(f"{TABELAS[k][0]}: {len(tabela)} registros" for k, tabela in importadas.items())
+            st.session_state["mensagem_importacao"] = f"Importação concluída. {resumo}."
             st.rerun()
         except (ValueError, TypeError, OverflowError, OSError, KeyError) as erro:
             st.error(f"Importação rejeitada: {erro}")
-    st.caption("Importações ficam nesta sessão. Baixe o CSV para guardar as alterações. Os dados originais permanecem em dados.json.")
-    with st.expander("Restaurar dados originais"):
-        st.caption("Esta ação descarta as importações de todas as tabelas nesta sessão.")
-        confirmar = st.checkbox("Quero descartar as importações desta sessão")
-        if st.button("Restaurar todas as tabelas originais", disabled=not confirmar):
+    st.caption("Os dados importados ficam apenas nesta sessão. Exporte os CSVs antes de fechar o painel para guardar uma cópia.")
+    with st.expander("Zerar todos os dados da sessão"):
+        st.caption("Remove todas as importações e deixa as tabelas vazias novamente.")
+        confirmar = st.checkbox("Quero apagar os dados importados desta sessão")
+        if st.button("Zerar painel", disabled=not confirmar):
             st.session_state.dados = carregar()
             limpar_filtros()
             st.rerun()
@@ -260,6 +320,20 @@ if pagina == "Gerenciar dados":
     if "mensagem_importacao" in st.session_state:
         st.success(st.session_state.pop("mensagem_importacao"))
     gerenciar_dados()
+    st.stop()
+
+if all(tabela.empty for tabela in dados.values()):
+    cabecalho.markdown('<div class="hero"><h1>Painel de Zoonoses e Controle Animal</h1><p>Sem dados cadastrados • Pronto para importar suas planilhas</p></div>', unsafe_allow_html=True)
+    with st.container(key="inicio_vazio"):
+        st.markdown('''<div class="boas-vindas">
+            <div class="simbolo-importacao" aria-hidden="true">↥</div>
+            <div class="etiqueta-inicio">PRONTO PARA COMEÇAR</div>
+            <h2>Seus dados, uma visão completa</h2>
+            <p>Importe uma planilha para preencher os indicadores, explorar os gráficos e acompanhar os registros de saúde animal.</p>
+            <div class="etapas-inicio"><span><b>1</b> Escolha a tabela</span><span><b>2</b> Envie sua planilha</span><span><b>3</b> Explore o painel</span></div>
+        </div>''', unsafe_allow_html=True)
+        st.button("Importar meus dados", on_click=lambda: st.session_state.update(pagina="Gerenciar dados"), type="primary", width="stretch")
+        st.markdown('<div class="nota-inicio">Arquivos CSV ou Excel · Modelos disponíveis na área de importação</div>', unsafe_allow_html=True)
     st.stop()
 
 with st.container(key="filtros_compactos"):
@@ -281,7 +355,7 @@ with st.container(key="filtros_compactos"):
     anos = filtro("Ano", datas.dt.year)
     meses = filtro("Mês", datas.dt.month)
     municipios = filtro("Município", pd.concat([v["m"] for v in dados.values()]))
-    selecoes["e"] = filtro("Espécie", dados["cad"]["e"])
+    selecoes["e"] = filtro("Espécie", pd.concat([dados["cad"]["e"], dados["vac"]["e"]]))
     especificos = {"canil": [("s", "Situação no canil"), ("a", "Atendimento")],
                    "notif": [("t", "Tipo de notificação"), ("b", "Bairro")],
                    "diag": [("do", "Doença")], "maus": [("tm", "Tipo de maus-tratos"), ("gr", "Gravidade")],
